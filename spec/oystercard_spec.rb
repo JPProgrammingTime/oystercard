@@ -42,4 +42,18 @@ describe OysterCard do
     expect { @card.deduct(deduct_amount) }.to change { @card.balance }.by(-deduct_amount)
   end
 
+  it "should be not in journey by default" do
+    expect(@card).to_not be_in_journey
+  end
+
+  it "should be in journey when touched in" do
+    @card.touch_in
+    expect(@card).to be_in_journey # Predicate matcher where in_journey is the specified predicate matcher method name.
+  end
+
+  it "should not be in journey when touched out" do
+    @card.touch_out
+    expect(@card).to_not be_in_journey
+  end
+
 end
