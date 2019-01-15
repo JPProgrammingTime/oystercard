@@ -2,6 +2,7 @@ require 'oystercard'
 
 describe OysterCard do
 
+  let(:station) { double :station }
   before(:each) do
     @card = OysterCard.new
   end
@@ -36,10 +37,9 @@ describe OysterCard do
 
   end
 
-  it "should deduct payment from balance on demand" do
-    deduct_amount = 5
+  it "should deduct minimum fare of £1 from balance at touch out" do
     @card.top_up(10)
-    expect { @card.deduct(deduct_amount) }.to change { @card.balance }.by(-deduct_amount)
+    expect { @card.touch_out(station) }.to change { @card.balance }.by(-1)
   end
 
   it "should be not in journey by default" do
@@ -48,19 +48,52 @@ describe OysterCard do
 
   it "should be in journey when touched in" do
     @card.top_up(5)
-    @card.touch_in
+    @card.touch_in(station)
     expect(@card).to be_in_journey # Predicate matcher where in_journey is the specified predicate matcher method name.
   end
 
   it "should not be in journey when touched out" do
     @card.top_up(5)
-    @card.touch_in
-    @card.touch_out
+    @card.touch_in(station)
+    @card.touch_out(station)
     expect(@card).to_not be_in_journey
   end
 
   it "should not touch in if balance is below £1" do
-    expect { @card.touch_in }.to raise_error "You do not have enough in your balance!"
+    expect { @card.touch_in(station) }.to raise_error "You do not have enough in your balance!"
+  end
+
+  it "should remember entry station at touch in" do
+    @card.top_up(5)
+    @card.touch_in(station)
+    expect(@card.entry_station).to eql(station)
+  end
+
+  it "should forget entry station at touch out by setting it to nil" do
+    @card.top_up(5)
+    @card.touch_in(station)
+    @card.touch_out(station)
+    expect(@card.entry_station).to eql(nil)
+  end
+
+  it "should return the journey date and time" do
+    @card.top_up(5)
+    @card.touch_in(station)
+    allow(Time).to receive(:now).and_return("2019-01-15 15:45:11 +0000")
+    @card.touch_out(station)
+    expect(@card.journeys.key?("2019-01-15 15:45:11 +0000")).to eql(true)
+  end
+
+  it "should return an empty list of journeys by default" do
+    expect(@card.journeys).to be_empty
+  end
+
+  it "should return journey station as Aldgate East and Wimbledon" do
+    @card.top_up(5)
+    @card.touch_in("Aldgate East")
+    allow(Time).to receive(:now).and_return("2019-01-15 15:45:11 +0000")
+    @card.touch_out("Wimbledon")
+    expect(@card.journeys["2019-01-15 15:45:11 +0000"]).to eql({:entry_station => "Aldgate East", :exit_station => "Wimbledon"})
   end
 
 end
