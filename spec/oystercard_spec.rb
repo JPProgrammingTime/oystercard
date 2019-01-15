@@ -47,13 +47,20 @@ describe OysterCard do
   end
 
   it "should be in journey when touched in" do
+    @card.top_up(5)
     @card.touch_in
     expect(@card).to be_in_journey # Predicate matcher where in_journey is the specified predicate matcher method name.
   end
 
   it "should not be in journey when touched out" do
+    @card.top_up(5)
+    @card.touch_in
     @card.touch_out
     expect(@card).to_not be_in_journey
+  end
+
+  it "should not touch in if balance is below £1" do
+    expect { @card.touch_in }.to raise_error "You do not have enough in your balance!"
   end
 
 end

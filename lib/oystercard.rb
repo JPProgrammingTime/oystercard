@@ -1,7 +1,8 @@
 class OysterCard
 
-  DEFAULT_BALANCE = 0
-  MAXIMUM_BALANCE = 90
+  DEFAULT_BALANCE = 0.freeze
+  MAXIMUM_BALANCE = 90.freeze
+  MINIMUM_BALANCE = 1.freeze
   MAX_BALANCE_ERROR = "Card limit of #{MAXIMUM_BALANCE} reached".freeze
 
   attr_reader :balance, :in_journey
@@ -26,6 +27,7 @@ class OysterCard
   end
 
   def touch_in
+    fail "You do not have enough in your balance!" if @balance < MINIMUM_BALANCE # No need to throw a raise!
     @in_journey = true
   end
 
