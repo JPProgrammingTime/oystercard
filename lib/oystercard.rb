@@ -7,16 +7,16 @@ class OysterCard
   MAXIMUM_BALANCE = 90.freeze
   MINIMUM_BALANCE = 1.freeze
   MINIMUM_FARE = 1.freeze
+  PENALTY_FARE = 6.freeze
   MAX_BALANCE_ERROR = "Card limit of #{MAXIMUM_BALANCE} reached".freeze
 
-  attr_reader :balance, :current_journey, :journeys
-  attr_accessor :journey_log
+  attr_reader :balance, :journey_list, :journey
 
   def initialize(balance = DEFAULT_BALANCE)
     @balance = balance
-    @journeys = {}
+    @journey_list = {}
     # @current_journey
-    @journey_log = Journey.new
+    @journey = Journey.new
   end
 
   def top_up(amount)
@@ -26,20 +26,21 @@ class OysterCard
   end
 
   def in_journey?
-    (@journey_log.journey_hash[:entry_station] == nil && @journey_log.journey_hash[:exit_station] == nil) ? false : true
+    @journey.new_journey? ? false : true
   end
 
   def touch_in(entry_station)
     fail "You do not have enough in your balance!" if @balance < MINIMUM_BALANCE # No need to throw a raise!
-    fare
-    @journey_log.journey_hash[:entry_station] = entry_station.name
+    fare(entry_penalty?)
+    @journey.log_entry_station(entry_station)
   end
 
   def touch_out(exit_station)
-    @journey_log.journey_hash[:exit_station] = exit_station.name
-    @journeys[Time.now] = @journey_log.journey_hash
-    @journey_log = Journey.new
-    fare
+    #@journey_log[:entry_station] == nil ? fare :
+    @journey.log_exit_station(exit_station)
+    fare(@journey.entry_log?)
+    add_journey_to_list
+
     # @entry_station = nil
   end
 
@@ -49,16 +50,21 @@ class OysterCard
 
   private
 
-  def fare
-    if @journey_log.journey_hash[:entry_station] == nil || @journey_log.journey_hash[:exit_station] == nil
-      deduct(6)
-    else
-      deduct(MINIMUM_FARE)
-    end
+  def entry_penalty?
+    @journey.new_journey? ? false : true
+  end
+
+  def fare(no_penalty = true)
+    no_penalty ? deduct(MINIMUM_FARE) : deduct(PENALTY_FARE)
   end
 
   def deduct(amount = MINIMUM_FARE)
     @balance -= amount
+  end
+
+  def add_journey_to_list
+    @journey_list[Time.now] = journey.journey_log
+    @journey = Journey.new
   end
 
 end

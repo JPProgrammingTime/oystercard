@@ -67,14 +67,14 @@ describe OysterCard do
   it "should remember entry station at touch in" do
     @card.top_up(5)
     @card.touch_in(@entry_station)
-    expect(@card.journey_log.journey_hash[:entry_station]).to eql(@entry_station.name)
+    expect(@card.journey.journey_log[:entry]).to eql(@entry_station.name)
   end
 
   it "should forget entry station at touch out by setting it to nil" do
     @card.top_up(5)
     @card.touch_in(@entry_station)
     @card.touch_out(@exit_station)
-    expect(@card.journey_log.journey_hash[:entry_station]).to eql(nil)
+    expect(@card.journey.journey_log[:entry]).to eql(nil)
   end
 
   it "should return the journey date and time" do
@@ -82,11 +82,11 @@ describe OysterCard do
     @card.touch_in(@entry_station)
     allow(Time).to receive(:now).and_return("2019-01-15 15:45:11 +0000")
     @card.touch_out(@exit_station)
-    expect(@card.journeys.key?("2019-01-15 15:45:11 +0000")).to eql(true)
+    expect(@card.journey_list.key?("2019-01-15 15:45:11 +0000")).to eql(true)
   end
 
   it "should return an empty list of journeys by default" do
-    expect(@card.journeys).to be_empty
+    expect(@card.journey_list).to be_empty
   end
 
   it "should return journey station as Aldgate East and Wimbledon" do
@@ -94,15 +94,26 @@ describe OysterCard do
     @card.touch_in(@entry_station)
     allow(Time).to receive(:now).and_return("2019-01-15 15:45:11 +0000")
     @card.touch_out(@exit_station)
-    expect(@card.journeys["2019-01-15 15:45:11 +0000"]).to eql({entry_station: "Aldgate East", exit_station: "Wimbledon"})
+    expect(@card.journey_list["2019-01-15 15:45:11 +0000"]).to eql({entry: "Aldgate East", exit: "Wimbledon"})
   end
 
   describe "testing private method 'deduct'" do
+
     it "should return deducted balance" do
       @card.top_up(5)
       @card.send(:deduct, 3) # We use 'send' to access all objects directly, EVEN PRIVATE METHODS! The second argument, is the value of the argument.
       expect(@card.balance).to eql(2)
     end
+
   end
 
+  describe "testing private method 'fare'" do
+
+    it "should return penalty fare deducted balance of 0" do
+      @card.top_up(6)
+      @card.touch_out(@exit_station)
+      expect(@card.balance).to eql(0)
+    end
+
+  end
 end
