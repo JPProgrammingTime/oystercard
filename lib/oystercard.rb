@@ -39,7 +39,7 @@ class OysterCard
     #@journey_log[:entry_station] == nil ? fare :
     @journey.log_exit_station(exit_station)
     fare(@journey.entry_log?)
-    add_journey_to_list
+    record_journey_and_finish
 
     # @entry_station = nil
   end
@@ -62,7 +62,7 @@ class OysterCard
     @balance -= amount
   end
 
-  def add_journey_to_list
+  def record_journey_and_finish
     @journey_list[Time.now] = journey.journey_log
     @journey = Journey.new
   end
