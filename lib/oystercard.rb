@@ -6,6 +6,7 @@ class OysterCard
   DEFAULT_BALANCE = 0.freeze
   MAXIMUM_BALANCE = 90.freeze
   MINIMUM_BALANCE = 1.freeze
+  MINIMUM_FARE = 1.freeze
   MAX_BALANCE_ERROR = "Card limit of #{MAXIMUM_BALANCE} reached".freeze
 
   attr_reader :balance, :current_journey, :journeys
@@ -15,7 +16,7 @@ class OysterCard
     @balance = balance
     @journeys = {}
     # @current_journey
-    @journey_log
+    @journey_log = Journey.new
   end
 
   def top_up(amount)
@@ -25,18 +26,20 @@ class OysterCard
   end
 
   def in_journey?
-    @entry_station.nil? ? false : true
+    (@journey_log.journey_hash[:entry_station] == nil && @journey_log.journey_hash[:exit_station] == nil) ? false : true
   end
 
   def touch_in(entry_station)
     fail "You do not have enough in your balance!" if @balance < MINIMUM_BALANCE # No need to throw a raise!
-    @journey_log = Journey.new(entry_station.name)
+    fare
+    @journey_log.journey_hash[:entry_station] = entry_station.name
   end
 
   def touch_out(exit_station)
-    deduct(MINIMUM_BALANCE)
     @journey_log.journey_hash[:exit_station] = exit_station.name
     @journeys[Time.now] = @journey_log.journey_hash
+    @journey_log = Journey.new
+    fare
     # @entry_station = nil
   end
 
@@ -46,7 +49,15 @@ class OysterCard
 
   private
 
-  def deduct(amount)
+  def fare
+    if @journey_log.journey_hash[:entry_station] == nil || @journey_log.journey_hash[:exit_station] == nil
+      deduct(6)
+    else
+      deduct(MINIMUM_FARE)
+    end
+  end
+
+  def deduct(amount = MINIMUM_FARE)
     @balance -= amount
   end
 
