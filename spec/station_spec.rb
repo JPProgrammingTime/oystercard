@@ -2,13 +2,15 @@ require 'station'
 
 describe Station do
 
-  subject { described_class.new("Bank", 1) }
+  before(:each) do
+    station = Station.new("Bank", 1)
+  end
 
   it 'Station has a name' do
-    expect(subject.name).to eql("Bank")
+    expect(station.name).to eql("Bank")
   end
 
   it 'Station has a zone' do
-    expect(subject.zone).to eql(1)
+    expect(station.zone).to eql(1)
   end
 end
